@@ -8,20 +8,9 @@ import { UPDATE_TODO } from '../graphQl/UPDATE_TODO'
 import { GET_TODO } from '../graphQl/GET_TODO';
 import { useParams } from 'react-router-dom';
 import { SingleTodo } from './SingleTodo';
+import { useNavigate } from 'react-router-dom';
+import type { Todo } from '../types/commonTypes';
 
-export type EditeTodoProps = {
-  title: string,
-  id: number,
-  handleDelete: (id: number) => void,
-}
-
-export type Todo = {
-  todo: {
-    id: number
-    title: string
-    completed: boolean
-  }
-}
 
 export const EditeTodo = () => {
   const { id } = useParams();
@@ -38,18 +27,25 @@ export const EditeTodo = () => {
   const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(event.target.value)
   }
+  let navigate = useNavigate();
 
-  const handleSave = () => {
-    updateTodo({
+  const handleSave = async () => {
+    await updateTodo({
       variables: {
-        id: todoId, input: {
+        id: todoId,
+        input: {
           title: text
         }
       }
     });
+    navigate('/');
   }
 
   return (
-    <SingleTodo text={text} handleChange={handleChange} handleSave={handleSave} />
+    <SingleTodo 
+      text={text} 
+      handleChange={handleChange} 
+      handleSave={handleSave} 
+    />
   )
 }

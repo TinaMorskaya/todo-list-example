@@ -1,6 +1,6 @@
 import '../App.css';
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export type SingleTodoProps = {
   text: string,
@@ -10,14 +10,13 @@ export type SingleTodoProps = {
 
 export const SingleTodo = ({ text, handleChange, handleSave }: SingleTodoProps) => {
   const [valid, setValid] = useState(true);
-  let navigate = useNavigate();
 
   const handleClick = () => {
     if (text.length < 3) {
       setValid(false)
     } else {
       setValid(true);
-      navigate('/');
+      handleSave()
     }
   }
   
