@@ -5,13 +5,7 @@ import {
 } from "@apollo/client";
 import { Link } from 'react-router-dom';
 import { UPDATE_TODO } from '../graphQl/UPDATE_TODO'
-
-export type CheckBoxProps = {
-  completed: boolean,
-  title: string,
-  id: number,
-  handleDelete: (id: number) => void,
-}
+import type { CheckBoxProps } from '../types/commonTypes';
 
 export const CheckBox = ({ completed, title, id, handleDelete }: CheckBoxProps) => {
   const [
