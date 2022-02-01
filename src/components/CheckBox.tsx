@@ -11,9 +11,10 @@ export type CheckBoxProps = {
   title: string,
   id: number,
   handleDelete: (id: number) => void,
+  forwardRef?: (node: any) => void
 }
 
-export const CheckBox = ({ completed, title, id, handleDelete }: CheckBoxProps) => {
+export const CheckBox = ({ completed, title, id, handleDelete, forwardRef }: CheckBoxProps) => {
   const [
     updateTodo
   ] = useMutation(UPDATE_TODO);
@@ -32,7 +33,9 @@ export const CheckBox = ({ completed, title, id, handleDelete }: CheckBoxProps) 
 
   const editLink = `/edit/${id}`;
   return (
-    <div className='todo'>
+    <>
+    {forwardRef?
+    (<div className='todo' ref={forwardRef}>
       <input
         type="checkbox"
         id={id.toString()}
@@ -46,5 +49,22 @@ export const CheckBox = ({ completed, title, id, handleDelete }: CheckBoxProps) 
         🗑
       </button>
     </div>
+    )
+    :     (<div className='todo'>
+    <input
+      type="checkbox"
+      id={id.toString()}
+      checked={completed}
+      onChange={handleChange} />
+    <label className='checkbox-label' htmlFor={id.toString()}>{title}</label>
+    <Link to={editLink}>
+      <button className='tools-button'>✏️</button>
+    </Link>
+    <button className='tools-button' onClick={() => handleDelete(id)} name={id.toString()}>
+      🗑
+    </button>
+  </div>)
+}
+  </>
   )
 }

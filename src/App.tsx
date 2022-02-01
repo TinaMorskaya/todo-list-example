@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef, useCallback } from 'react';
 import './App.css';
 import {
   useMutation,
@@ -21,12 +21,52 @@ function TodosList() {
     options: {
       operators: {},
       search: {},
+      paginate: {
+        page: 1,
+        limit: 10,
+      }
     }
   })
+  const [pageNum, setPageNum] = useState(1);
   const [checked, setChecked] = useState('all')
-  const [getToDos, { loading, error, data }] = useLazyQuery(GET_TODOS);
+  const [getToDos, { loading, error, data, fetchMore }] = useLazyQuery(GET_TODOS);
   const [searchText, setSearchText] = useState('')
-  console.log(data)
+  const [todos, setTodos] = useState<Array<CheckBoxProps>>([]);
+  
+  console.log(todos)
+  const hasMore = data?.todos?.data?.length > 0 ? true : false
+  console.log('meta' , data?.todos?.meta)
+  const observer = useRef<any>();
+  const lastBookElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      console.log(loading, hasMore)
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          console.log(entries[0].isIntersecting)
+          console.log(todos.length)
+          console.log(pageNum)
+          if(todos?.length < data?.todos?.meta?.totalCount ) {
+          setFilterOptions({
+            options: {
+              ...filterOptions.options,
+              paginate: {
+                page: pageNum + 1,
+                limit: 10,
+              },
+            }
+          })
+          setPageNum((prev) => prev + 1);
+        }
+      }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
+
+  
   useEffect(() => {
     const getData = async () => {
       await getToDos({
@@ -35,6 +75,18 @@ function TodosList() {
     }
     getData()
   }, [filterOptions, getToDos])
+
+  useEffect(() => {
+    const setData = () => {
+      if (data?.todos?.data) {
+        setTodos((prev) => {
+        console.log(data?.todos?.data, 'prex')
+        return [...prev, ...data?.todos?.data];
+        })
+      }
+    }
+    setData()
+  }, [data])
 
   const [deleteTodo] = useMutation(DELETE_TODO);
   const handleDelete = (id: number) => {
@@ -54,6 +106,10 @@ function TodosList() {
       setFilterOptions({
         options: {
           ...filterOptions.options,
+          paginate: {
+            page: 1,
+            limit: 10,
+          }, 
           operators: {
             kind: "LIKE",
             field: "completed",
@@ -61,14 +117,20 @@ function TodosList() {
           }
         }
       })
+      setTodos([])
     } else {
       setChecked(event.target.value)
       setFilterOptions({
         options: {
           ...filterOptions.options,
+          paginate: {
+            page: 1,
+            limit: 10,
+          },
           operators: {}
         }
       })
+      setTodos([])
     }
   }
 
@@ -77,23 +139,37 @@ function TodosList() {
     setFilterOptions({
       options: {
         ...filterOptions.options,
+        paginate: {
+          page: 1,
+          limit: 10,
+        },
         search: {
           q: event.target.value
         }
       }
     })
+    setTodos([])
   }
 
   const Main = () => {
-    if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :(</p>;
-    if (data?.todos?.data?.length === 0) return <p>Unfortunately I couldn't find anything...</p>
+      console.log(todos?.length, 'LENH')
+    if (data?.todos?.data?.length === 0 && todos?.length === 0) return <p>Unfortunately I couldn't find anything...</p>
+    console.log(data?.todos?.data?.length)
     return (
-      <>{data?.todos?.data?.map(({ id, title, completed }: CheckBoxProps) => (
-        deletedTodos.includes(id)
-          ? null
-          : <CheckBox handleDelete={handleDelete} key={id} id={id} title={title} completed={completed} />
-      ))}</>)
+      <>
+        {todos?.map(({ id, title, completed }: CheckBoxProps, idx: number) => (
+          deletedTodos.includes(id)
+            ? null
+            : 
+            ((todos.length === idx + 1) ?
+            <CheckBox forwardRef={lastBookElementRef} handleDelete={handleDelete} key={id} id={id} title={title} completed={completed} />
+            :  <CheckBox handleDelete={handleDelete} key={id} id={id} title={title} completed={completed} />
+            )
+        ))}
+        {loading && <p>Loading...</p>}
+      </>
+    )
   }
 
   const radioButtons = [{ value: "true", label: "Done" }, { value: "false", label: "To do" }, { value: "all", label: "All" },]

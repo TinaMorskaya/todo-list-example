@@ -8,10 +8,18 @@ import {
   InMemoryCache,
   ApolloProvider,
 } from "@apollo/client";
+import { offsetLimitPagination } from "@apollo/client/utilities";
 
 const client = new ApolloClient({
   uri: 'https://graphqlzero.almansi.me/api',
-  cache: new InMemoryCache()
+  cache: new InMemoryCache({  
+    typePolicies: {
+      Query: {
+        fields: {
+          feed: offsetLimitPagination()
+        },
+      },
+  },})
 });
 
 
