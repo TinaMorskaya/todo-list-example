@@ -29,24 +29,19 @@ function TodosList() {
   })
   const [pageNum, setPageNum] = useState(1);
   const [checked, setChecked] = useState('all')
-  const [getToDos, { loading, error, data, fetchMore }] = useLazyQuery(GET_TODOS);
+  const [getToDos, { loading, error, data }] = useLazyQuery(GET_TODOS);
   const [searchText, setSearchText] = useState('')
   const [todos, setTodos] = useState<Array<CheckBoxProps>>([]);
   
-  console.log(todos)
+
   const hasMore = data?.todos?.data?.length > 0 ? true : false
-  console.log('meta' , data?.todos?.meta)
   const observer = useRef<any>();
   const lastBookElementRef = useCallback(
     (node) => {
       if (loading) return;
-      console.log(loading, hasMore)
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          console.log(entries[0].isIntersecting)
-          console.log(todos.length)
-          console.log(pageNum)
           if(todos?.length < data?.todos?.meta?.totalCount ) {
           setFilterOptions({
             options: {
@@ -80,7 +75,6 @@ function TodosList() {
     const setData = () => {
       if (data?.todos?.data) {
         setTodos((prev) => {
-        console.log(data?.todos?.data, 'prex')
         return [...prev, ...data?.todos?.data];
         })
       }
@@ -90,7 +84,6 @@ function TodosList() {
 
   const [deleteTodo] = useMutation(DELETE_TODO);
   const handleDelete = (id: number) => {
-    console.log(id)
     deleteTodo({
       variables: { id: id }
     });
@@ -153,9 +146,7 @@ function TodosList() {
 
   const Main = () => {
     if (error) return <p>Error :(</p>;
-      console.log(todos?.length, 'LENH')
     if (data?.todos?.data?.length === 0 && todos?.length === 0) return <p>Unfortunately I couldn't find anything...</p>
-    console.log(data?.todos?.data?.length)
     return (
       <>
         {todos?.map(({ id, title, completed }: CheckBoxProps, idx: number) => (
